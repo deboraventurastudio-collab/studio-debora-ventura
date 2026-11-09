@@ -86,6 +86,19 @@ class _PgConnection:
         self.raw.rollback()
 
 
+class _StringAgg:
+    def __init__(self):
+        self.values = []
+        self.separator = ", "
+    def step(self, value, separator):
+        if value is not None:
+            self.values.append(str(value))
+        if separator is not None:
+            self.separator = str(separator)
+    def finalize(self):
+        return self.separator.join(self.values) if self.values else None
+
+
 def _connect():
     app_env = os.getenv("APP_ENV", "local").strip().lower()
     if app_env == "production" and not USE_POSTGRES:
@@ -104,6 +117,7 @@ def _connect():
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(db_path), timeout=20)
     conn.row_factory = sqlite3.Row
+    conn.create_aggregate("STRING_AGG", 2, _StringAgg)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 

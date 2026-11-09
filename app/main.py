@@ -19,7 +19,7 @@ from .database import init_db, query, execute, transaction
 ROOT = Path(__file__).resolve().parent
 init_db()
 APP_ENV = os.getenv("APP_ENV", "local").strip().lower()
-app = FastAPI(title="Studio Débora Ventura", version="1.4.0")
+app = FastAPI(title="Studio Débora Ventura", version="1.4.4")
 # Em produção, senha e segredo da sessão vêm exclusivamente das variáveis seguras do Render.
 MASTER_PASSWORD = os.getenv("STUDIO_MASTER_PASSWORD", "1015")
 if APP_ENV == "production" and len(MASTER_PASSWORD) < 12:
@@ -66,7 +66,7 @@ def money(value):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "app": "Studio Débora Ventura", "version": "1.4.0"}
+    return {"status": "ok", "app": "Studio Débora Ventura", "version": "1.4.4"}
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, next: str = "/"):
@@ -127,7 +127,7 @@ def client_detail(request: Request, client_id: int):
     if not clients:
         raise HTTPException(404, "Cliente não encontrado")
     client = clients[0]
-    sales = query("""SELECT s.*, COALESCE(GROUP_CONCAT(si.description || ' x' || si.quantity, ', '),'') items
+    sales = query("""SELECT s.*, COALESCE(STRING_AGG(si.description || ' x' || si.quantity, ', '),'') items
         FROM sales s LEFT JOIN sale_items si ON si.sale_id=s.id
         WHERE s.client_id=? GROUP BY s.id ORDER BY s.created_at DESC""", (client_id,))
     appointments = query("""SELECT a.*, sv.name service_name FROM appointments a
@@ -196,7 +196,7 @@ def agenda_page(request: Request, mes: str = ""):
     grid_start = first - timedelta(days=first.weekday())
     grid_end = date(year, month, last_day) + timedelta(days=(6-date(year,month,last_day).weekday()))
     rows = query("""SELECT a.*, c.name client_name,
-        COALESCE((SELECT GROUP_CONCAT(ai.description || CASE WHEN ai.quantity>1 THEN ' × '||ai.quantity ELSE '' END, ', ') FROM appointment_items ai WHERE ai.appointment_id=a.id),s.name) service_name
+        COALESCE((SELECT STRING_AGG(ai.description || CASE WHEN ai.quantity>1 THEN ' × '||ai.quantity ELSE '' END, ', ') FROM appointment_items ai WHERE ai.appointment_id=a.id),s.name) service_name
         FROM appointments a JOIN clients c ON c.id=a.client_id JOIN services s ON s.id=a.service_id
         WHERE substr(a.starts_at,1,10)>=? AND substr(a.starts_at,1,10)<=? ORDER BY a.starts_at""",
         (grid_start.isoformat(), grid_end.isoformat()))
@@ -212,7 +212,7 @@ def agenda_page(request: Request, mes: str = ""):
     clients = query("SELECT id,name FROM clients ORDER BY name")
     services = query("SELECT id,name,price,duration_minutes FROM services WHERE active=1 ORDER BY name")
     recent = query("""SELECT a.*, c.name client_name,
-        COALESCE((SELECT GROUP_CONCAT(ai.description || CASE WHEN ai.quantity>1 THEN ' × '||ai.quantity ELSE '' END, ', ') FROM appointment_items ai WHERE ai.appointment_id=a.id),s.name) service_name
+        COALESCE((SELECT STRING_AGG(ai.description || CASE WHEN ai.quantity>1 THEN ' × '||ai.quantity ELSE '' END, ', ') FROM appointment_items ai WHERE ai.appointment_id=a.id),s.name) service_name
         FROM appointments a JOIN clients c ON c.id=a.client_id JOIN services s ON s.id=a.service_id
         ORDER BY a.starts_at DESC LIMIT 100""")
     return render(request,"agenda.html",clients=clients,services=services,rows=recent,weeks=weeks,
@@ -336,7 +336,7 @@ def sales_page(request: Request):
     clients = query("SELECT id,name FROM clients ORDER BY name")
     products = query("SELECT id,name,sale_price,stock_qty FROM products ORDER BY name")
     rows = query("""SELECT s.*, c.name client_name, a.starts_at appointment_starts_at,
-        COALESCE(GROUP_CONCAT(si.description || ' × ' || si.quantity, ', '),'') items
+        COALESCE(STRING_AGG(si.description || ' × ' || si.quantity, ', '),'') items
         FROM sales s LEFT JOIN clients c ON c.id=s.client_id
         LEFT JOIN appointments a ON a.id=s.appointment_id
         LEFT JOIN sale_items si ON si.sale_id=s.id

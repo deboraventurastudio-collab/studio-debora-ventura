@@ -1,12 +1,13 @@
-STUDIO DEBORA VENTURA v1.4.0 — BANCO PERMANENTE
+STUDIO DEBORA VENTURA — VERSAO 1.4.3
 
-ATENÇÃO: antes de enviar esta versão ao GitHub, entre no Render > serviço do Studio > Environment e configure:
-APP_ENV=production
-DATABASE_URL=<connection string PostgreSQL do Neon; segredo>
+CORRECOES DESTA VERSAO
+1. Busca de clientes por nome ou iniciais com lista de selecao compativel com toque.
+2. Ajustes de formularios e controles para uso em dispositivos moveis.
+3. Novo agendamento inicia com o campo SERVICO em branco e exige escolha manual.
 
-Mantenha STUDIO_MASTER_PASSWORD e SESSION_SECRET_KEY já existentes.
-Não publique a versão antes de salvar DATABASE_URL. O sistema foi preparado para bloquear SQLite temporário em produção.
-
-Depois disso, envie o conteúdo desta pasta ao mesmo repositório GitHub. Não envie arquivos .db, pasta data, .env, senhas ou tokens.
-
-Os dados antigos que sumiram do Render não são recuperados automaticamente. Primeiro vamos garantir o banco permanente e depois verificar se existe backup recuperável.
+IMPORTANTE
+- Preserve o mesmo repositorio GitHub, a mesma branch e o mesmo servico Render.
+- Nao crie outro servico e nao use Blueprint.
+- Nao altere as variaveis de ambiente nem a configuracao atual do banco nesta atualizacao.
+- Antes de publicar, tenha uma copia de seguranca dos dados.
+- Depois do deploy, teste criacao e edicao no computador e no celular.

@@ -4,7 +4,7 @@
  <div class="section-heading"><div><div class="eyebrow">NOVA VENDA</div><h3>Registrar venda de produtos</h3></div><span class="pill">Múltiplos produtos</span></div>
  <form method="post" action="/vendas" id="sale-form" class="form-grid">
   <input type="hidden" name="item_type" value="produto">
-  <label>Cliente (opcional)<input type="text" data-client-picker list="client-options" placeholder="Digite as iniciais ou deixe em branco" autocomplete="off"><input type="hidden" name="client_id" data-client-id></label>
+  <div class="client-field"><label for="sale-client">Cliente (opcional)</label><div class="client-autocomplete"><input id="sale-client" type="search" data-client-picker placeholder="Digite o nome ou as iniciais" autocomplete="off" autocapitalize="off" spellcheck="false" aria-autocomplete="list"><input type="hidden" name="client_id" data-client-id></div></div>
   <div class="full-field sale-lines-head"><b>Produtos da venda</b><button type="button" class="dark-button" onclick="addLine()">＋ Adicionar produto</button></div>
   <div class="full-field" id="sale-lines"><div class="sale-line">
    <label class="line-product">Produto<select name="item_id" class="item-select" required onchange="calculateSale()">{% for p in products %}<option value="{{ p.id }}" data-price="{{ p.sale_price }}" data-stock="{{ p.stock_qty }}">{{ p.name }} · R$ {{ "%.2f"|format(p.sale_price) }} · estoque {{ p.stock_qty }}</option>{% endfor %}</select></label>
