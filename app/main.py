@@ -19,7 +19,7 @@ from .database import init_db, query, execute, transaction
 ROOT = Path(__file__).resolve().parent
 init_db()
 APP_ENV = os.getenv("APP_ENV", "local").strip().lower()
-app = FastAPI(title="Studio Débora Ventura", version="1.4.4")
+app = FastAPI(title="Studio Débora Ventura", version="1.4.6")
 # Em produção, senha e segredo da sessão vêm exclusivamente das variáveis seguras do Render.
 MASTER_PASSWORD = os.getenv("STUDIO_MASTER_PASSWORD", "1015")
 if APP_ENV == "production" and len(MASTER_PASSWORD) < 12:
@@ -66,7 +66,7 @@ def money(value):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "app": "Studio Débora Ventura", "version": "1.4.4"}
+    return {"status": "ok", "app": "Studio Débora Ventura", "version": "1.4.6"}
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, next: str = "/"):
@@ -121,6 +121,17 @@ def create_client(name: str = Form(...), phone: str = Form(""), email: str = For
             (name.strip(), phone.strip(), email.strip(), notes.strip()))
     return RedirectResponse("/clientes", status_code=303)
 
+@app.post("/clientes/{client_id}/excluir")
+def delete_client(client_id: int):
+    if not query("SELECT id FROM clients WHERE id=?", (client_id,)):
+        raise HTTPException(404, "Cliente não encontrada")
+    linked = query("SELECT (SELECT COUNT(*) FROM appointments WHERE client_id=?) + (SELECT COUNT(*) FROM sales WHERE client_id=?) AS n", (client_id, client_id))[0]["n"]
+    if linked:
+        raise HTTPException(400, "Não é possível excluir: esta cliente possui atendimentos ou vendas no histórico. Preserve o cadastro para manter os registros financeiros.")
+    execute("DELETE FROM clients WHERE id=?", (client_id,))
+    return RedirectResponse("/clientes", status_code=303)
+
+
 @app.get("/clientes/{client_id}", response_class=HTMLResponse)
 def client_detail(request: Request, client_id: int):
     clients = query("SELECT * FROM clients WHERE id=?", (client_id,))
@@ -151,6 +162,17 @@ def create_service(name: str = Form(...), duration_minutes: int = Form(60), pric
             (name.strip(), duration_minutes, price, estimated_cost))
     return RedirectResponse("/servicos", status_code=303)
 
+@app.post("/servicos/{service_id}/excluir")
+def delete_service(service_id: int):
+    if not query("SELECT id FROM services WHERE id=?", (service_id,)):
+        raise HTTPException(404, "Serviço não encontrado")
+    linked = query("SELECT (SELECT COUNT(*) FROM appointments WHERE service_id=?) + (SELECT COUNT(*) FROM appointment_items WHERE service_id=?) AS n", (service_id, service_id))[0]["n"]
+    if linked:
+        raise HTTPException(400, "Não é possível excluir: este serviço aparece em atendimentos existentes. Preserve o histórico.")
+    execute("DELETE FROM services WHERE id=?", (service_id,))
+    return RedirectResponse("/servicos", status_code=303)
+
+
 @app.get("/produtos", response_class=HTMLResponse)
 def products_page(request: Request):
     rows = query("SELECT * FROM products ORDER BY name")
@@ -167,6 +189,17 @@ def create_product(name: str = Form(...), sku: str = Form(""), cost_price: float
         execute("INSERT INTO stock_movements(product_id,movement_type,quantity,note) VALUES(?,?,?,?)",
                 (product_id, "Entrada inicial", stock_qty, "Cadastro inicial do produto"))
     return RedirectResponse("/produtos", status_code=303)
+
+@app.post("/produtos/{product_id}/excluir")
+def delete_product(product_id: int):
+    if not query("SELECT id FROM products WHERE id=?", (product_id,)):
+        raise HTTPException(404, "Produto não encontrado")
+    linked = query("SELECT (SELECT COUNT(*) FROM sale_items WHERE item_type='produto' AND item_id=?) + (SELECT COUNT(*) FROM stock_movements WHERE product_id=?) AS n", (product_id, product_id))[0]["n"]
+    if linked:
+        raise HTTPException(400, "Não é possível excluir: este produto possui vendas ou movimentações de estoque. Preserve o histórico.")
+    execute("DELETE FROM products WHERE id=?", (product_id,))
+    return RedirectResponse("/produtos", status_code=303)
+
 
 @app.post("/estoque/entrada")
 def stock_entry(product_id: int = Form(...), quantity: int = Form(...), note: str = Form("")):
@@ -223,6 +256,7 @@ def agenda_page(request: Request, mes: str = ""):
 def edit_appointment_page(request: Request, appointment_id: int):
     rows=query("SELECT * FROM appointments WHERE id=?",(appointment_id,))
     if not rows: raise HTTPException(404,"Agendamento não encontrado")
+    if rows[0]["status"] == "Cancelado": raise HTTPException(400,"Este agendamento está cancelado.")
     items=query("SELECT * FROM appointment_items WHERE appointment_id=? ORDER BY id",(appointment_id,))
     return render(request,"appointment_edit.html",appt=rows[0],items=items,clients=query("SELECT id,name FROM clients ORDER BY name"),services=query("SELECT id,name,price,duration_minutes FROM services WHERE active=1 ORDER BY name"))
 
@@ -230,6 +264,7 @@ def edit_appointment_page(request: Request, appointment_id: int):
 def edit_appointment(appointment_id:int, client_id:int=Form(...), service_ids:list[int]=Form(...), quantities:list[int]=Form(...), appointment_date:str=Form(...), appointment_time:str=Form(...), notes:str=Form(""), due_date:str=Form("")):
     old=query("SELECT * FROM appointments WHERE id=?",(appointment_id,))
     if not old: raise HTTPException(404,"Agendamento não encontrado")
+    if old[0]["status"] == "Cancelado": raise HTTPException(400,"Este agendamento está cancelado e não pode ser editado.")
     if not service_ids or len(service_ids)!=len(quantities) or any(q<1 for q in quantities): raise HTTPException(400,"Selecione os serviços e quantidades")
     services=[]; total=0.0
     for sid,qty in zip(service_ids,quantities):
@@ -251,6 +286,21 @@ def edit_appointment(appointment_id:int, client_id:int=Form(...), service_ids:li
         if total-paid>.001 and not conn.execute("SELECT id FROM cash_movements WHERE appointment_id=? AND status='Pendente'",(appointment_id,)).fetchone():
             conn.execute("INSERT INTO cash_movements(cash_type,direction,amount,description,payment_method,status,due_date,appointment_id) VALUES('servicos','Entrada',?,?,'Faturado','Pendente',?,?)",(round(total-paid,2),f"Saldo atualizado — atendimento #{appointment_id}",due_date,appointment_id))
     transaction(work); return RedirectResponse('/agenda',status_code=303)
+
+@app.post("/agenda/{appointment_id}/cancelar")
+def cancel_appointment(appointment_id: int):
+    rows = query("SELECT * FROM appointments WHERE id=?", (appointment_id,))
+    if not rows:
+        raise HTTPException(404, "Agendamento não encontrado")
+    if rows[0]["status"] == "Cancelado":
+        return RedirectResponse("/agenda", status_code=303)
+    def work(conn):
+        conn.execute("UPDATE appointments SET status='Cancelado' WHERE id=?", (appointment_id,))
+        # Remove somente a cobrança ainda pendente; recebimentos realizados permanecem no caixa.
+        conn.execute("DELETE FROM cash_movements WHERE appointment_id=? AND status='Pendente'", (appointment_id,))
+    transaction(work)
+    return RedirectResponse("/agenda", status_code=303)
+
 
 @app.post("/agenda")
 def create_appointment(client_id:int=Form(...), service_ids:list[int]=Form(...), quantities:list[int]=Form(...), appointment_date:str=Form(...), appointment_time:str=Form(...), notes:str=Form(""), payment_method:str=Form("Pendente"), amount_paid:float=Form(0), due_date:str=Form("")):
@@ -286,6 +336,8 @@ def receive_appointment_payment(appointment_id: int, amount: float = Form(...),
         appt=conn.execute("SELECT * FROM appointments WHERE id=?",(appointment_id,)).fetchone()
         if not appt:
             raise HTTPException(404,"Agendamento não encontrado")
+        if appt["status"] == "Cancelado":
+            raise HTTPException(400,"Não é possível receber pagamento de um agendamento cancelado.")
         balance=round(float(appt["total_amount"])-float(appt["amount_paid"]),2)
         if amount > balance + 0.001:
             raise HTTPException(400,"O recebimento supera o saldo pendente")
@@ -408,11 +460,36 @@ def create_sale(client_id: str = Form(""), item_type: str = Form(...),
     sale_id=transaction(work)
     return RedirectResponse(f"/vendas?registrada={sale_id}", status_code=303)
 
+@app.post("/vendas/{sale_id}/cancelar")
+def cancel_sale(sale_id: int):
+    rows = query("SELECT * FROM sales WHERE id=?", (sale_id,))
+    if not rows:
+        raise HTTPException(404, "Venda não encontrada")
+    sale = rows[0]
+    if sale["status"] == "Cancelada":
+        return RedirectResponse("/vendas", status_code=303)
+    items = query("SELECT * FROM sale_items WHERE sale_id=?", (sale_id,))
+    def work(conn):
+        # Estorna o estoque dos produtos vendidos e registra o movimento de auditoria.
+        for item in items:
+            if item["item_type"] == "produto" and item["item_id"]:
+                conn.execute("UPDATE products SET stock_qty=stock_qty+? WHERE id=?", (item["quantity"], item["item_id"]))
+                conn.execute("INSERT INTO stock_movements(product_id,movement_type,quantity,note,sale_id) VALUES(?,?,?,?,?)",
+                    (item["item_id"], "Estorno de venda", item["quantity"], f"Cancelamento da venda #{sale_id}", sale_id))
+        conn.execute("UPDATE sales SET status='Cancelada' WHERE id=?", (sale_id,))
+        # Cobranças futuras são anuladas; pagamentos recebidos e lançamentos realizados ficam preservados para conferência/estorno financeiro.
+        conn.execute("DELETE FROM cash_movements WHERE sale_id=? AND status='Pendente'", (sale_id,))
+    transaction(work)
+    return RedirectResponse("/vendas", status_code=303)
+
+
 @app.get("/vendas/{sale_id}/editar", response_class=HTMLResponse)
 def edit_sale_page(request: Request, sale_id: int):
     sales=query("SELECT * FROM sales WHERE id=?",(sale_id,))
     if not sales: raise HTTPException(404,"Venda não encontrada")
-    sale=sales[0]; items=query("SELECT * FROM sale_items WHERE sale_id=?",(sale_id,))
+    sale=sales[0]
+    if sale["status"] == "Cancelada": raise HTTPException(400,"Esta venda está cancelada.")
+    items=query("SELECT * FROM sale_items WHERE sale_id=?",(sale_id,))
     item_subtotal=sum(float(i["line_total"]) for i in items)
     discount_input=(float(sale["discount"])/item_subtotal*100 if sale["discount_type"]=="percentual" and item_subtotal else float(sale["discount"]))
     item_type=items[0]["item_type"] if items else "produto"
@@ -424,6 +501,7 @@ def edit_sale(sale_id:int, client_id:str=Form(""), item_id:list[int]=Form(...), 
     old=query("SELECT * FROM sales WHERE id=?",(sale_id,))
     old_items=query("SELECT * FROM sale_items WHERE sale_id=?",(sale_id,))
     if not old or not old_items: raise HTTPException(404,"Venda não encontrada")
+    if old[0]["status"] == "Cancelada": raise HTTPException(400,"Esta venda está cancelada e não pode ser editada.")
     if len(item_id)!=len(quantity) or not item_id or any(q<1 for q in quantity) or discount<0: raise HTTPException(400,"Confira os itens e quantidades")
     item_type=old_items[0]["item_type"]
     if any(x["item_type"]!=item_type for x in old_items): raise HTTPException(400,"Esta operação contém tipos diferentes; mantenha o tipo original")
@@ -617,6 +695,8 @@ def receive_payment(sale_id: int, amount: float = Form(...),
         sale = conn.execute("SELECT * FROM sales WHERE id=?", (sale_id,)).fetchone()
         if not sale:
             raise HTTPException(404, "Venda não encontrada")
+        if sale["status"] == "Cancelada":
+            raise HTTPException(400, "Não é possível receber pagamento de uma venda cancelada.")
         balance = round(float(sale["total"]) - float(sale["amount_paid"]), 2)
         if amount > balance + 0.001:
             raise HTTPException(400, "O recebimento não pode superar o saldo em aberto")
