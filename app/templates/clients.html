@@ -1,0 +1,9 @@
+
+{% extends "base.html" %}{% block heading %}Clientes{% endblock %}{% block eyebrow %}RELACIONAMENTO E HISTÓRICO{% endblock %}
+{% block content %}
+<section class="surface form-surface"><div class="section-heading"><div><div class="eyebrow">NOVA CLIENTE</div><h3>Adicionar à sua base</h3></div></div>
+<form method="post" action="/clientes" class="form-grid"><label>Nome completo<input name="name" required placeholder="Nome da cliente"></label><label>Telefone / WhatsApp<input name="phone" placeholder="(31) 99999-9999"></label><label>E-mail<input name="email" type="email" placeholder="email@exemplo.com"></label><label>Observações<input name="notes" placeholder="Preferências e observações"></label><button class="gold-button" type="submit">Salvar cliente <span>→</span></button></form></section>
+<section class="surface"><div class="section-heading"><div><div class="eyebrow">CADASTRO</div><h3>Carteira de clientes</h3></div><span class="count-chip">{{ rows|length }} registros</span></div>
+<form class="search-row" method="get"><input name="q" value="{{ q }}" placeholder="Buscar por nome ou telefone"><button class="dark-button">Buscar</button></form>
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>CLIENTE</th><th>TELEFONE</th><th>E-MAIL</th><th>HISTÓRICO</th></tr></thead><tbody>{% for x in rows %}<tr><td><b>{{ x.name }}</b></td><td>{{ x.phone or "—" }}</td><td>{{ x.email or "—" }}</td><td><a class="table-link" href="/clientes/{{ x.id }}">Abrir ficha →</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">Nenhuma cliente encontrada.</div>{% endif %}</section>
+{% endblock %}

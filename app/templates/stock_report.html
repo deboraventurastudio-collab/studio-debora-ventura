@@ -1,0 +1,4 @@
+
+{% extends "base.html" %}{% block heading %}Movimentação de estoque{% endblock %}{% block eyebrow %}RASTREABILIDADE · ENTRADAS E SAÍDAS{% endblock %}
+{% block content %}<section class="surface"><div class="section-heading"><div><div class="eyebrow">CONFERÊNCIA</div><h3>Histórico de movimentações</h3></div><a href="/relatorios" class="subtle-link">Voltar aos relatórios →</a></div>
+{% if movements %}<div class="table-wrap"><table><thead><tr><th>DATA</th><th>PRODUTO</th><th>MOVIMENTAÇÃO</th><th>QUANTIDADE</th><th>OBSERVAÇÃO</th></tr></thead><tbody>{% for m in movements %}<tr><td>{{ m.created_at[:16] }}</td><td>{{ m.product_name }}</td><td>{{ m.movement_type }}</td><td class="{% if m.quantity < 0 %}negative{% else %}positive{% endif %}">{{ "%+d"|format(m.quantity) }}</td><td>{{ m.note or "—" }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">Ainda não há movimentações registradas.</div>{% endif %}</section>{% endblock %}

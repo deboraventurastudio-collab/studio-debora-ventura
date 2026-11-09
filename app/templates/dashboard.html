@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Visão geral | Studio Débora Ventura{% endblock %}
+{% block heading %}Visão geral{% endblock %}
+{% block eyebrow %}BEM-VINDA AO SEU STUDIO{% endblock %}
+{% block content %}
+<section class="hero">
+ <div class="hero-copy"><div class="eyebrow gold">BELEZA · CUIDADO · EXCELÊNCIA</div>
+ <h2>Seu talento merece<br><em>uma gestão à altura.</em></h2>
+ <p>Uma visão clara da rotina, dos clientes e dos resultados do Studio Débora Ventura.</p>
+ <a class="gold-button" href="/agenda">Acessar agenda <span>→</span></a></div>
+ <div class="hero-logo"><img src="/static/img/logo-debora-ventura.png" alt="Logo original Débora Ventura"></div>
+</section>
+<section class="metric-grid">
+ <article class="metric-card"><div class="metric-icon">♙</div><span>CLIENTES</span><strong>{{ clients }}</strong><small>Na sua base de relacionamento</small></article>
+ <article class="metric-card"><div class="metric-icon">▦</div><span>ATENDIMENTOS HOJE</span><strong>{{ appointments }}</strong><small>Agendados para hoje</small></article>
+ <article class="metric-card"><div class="metric-icon">R$</div><span>RECEBIDO HOJE</span><strong>R$ {{ "%.2f"|format(financial.received) }}</strong><small>Pagamentos registrados hoje</small></article>
+ <article class="metric-card"><div class="metric-icon">◷</div><span>EM ABERTO HOJE</span><strong>R$ {{ "%.2f"|format(financial.pending) }}</strong><small>Saldo pendente de recebimento</small></article>
+</section>
+<section class="dashboard-grid">
+ <article class="surface"><div class="section-heading"><div><div class="eyebrow">AGENDA</div><h3>Próximos atendimentos</h3></div><a href="/agenda" class="subtle-link">Ver agenda →</a></div>
+ {% if upcoming %}<div class="appointment-list">{% for item in upcoming %}
+ <div class="appointment-row"><div class="appointment-date"><b>{{ item.starts_at[8:10] }}</b><small>{{ item.starts_at[5:7] }}/{{ item.starts_at[0:4] }}</small></div><div class="appointment-info"><b>{{ item.client_name }}</b><small>{{ item.service_name }}</small></div><span class="pill">{{ item.status }}</span></div>
+ {% endfor %}</div>{% else %}<div class="empty-state">Sua agenda está livre por enquanto.</div>{% endif %}
+ </article>
+ <article class="surface"><div class="section-heading"><div><div class="eyebrow">ESTOQUE</div><h3>Atenção aos produtos</h3></div><a href="/produtos" class="subtle-link">Gerenciar →</a></div>
+ {% if low_stock %}<div class="stock-alert-list">{% for item in low_stock %}<div class="stock-alert"><span class="tiny-gem">◇</span><div><b>{{ item.name }}</b><small>Estoque mínimo: {{ item.min_stock }}</small></div><strong>{{ item.stock_qty }} un.</strong></div>{% endfor %}</div>{% else %}<div class="empty-state">Nenhum produto abaixo do estoque mínimo.</div>{% endif %}
+ </article>
+</section>
+<section class="quick-links"><a href="/agenda"><span>◷</span><div><b>Agendar atendimento</b><small>Serviços, horários e recebimentos</small></div><i>→</i></a><a href="/caixa/geral"><span>◇</span><div><b>Fluxo de caixa</b><small>Movimentações consolidadas</small></div><i>→</i></a><a href="/vendas"><span>＋</span><div><b>Registrar venda</b><small>Somente produtos e estoque</small></div><i>→</i></a><a href="/relatorios"><span>▥</span><div><b>Analisar resultados</b><small>Financeiro, lucros e clientes</small></div><i>→</i></a><a href="/clientes"><span>♙</span><div><b>Nova cliente</b><small>Ampliar relacionamento</small></div><i>→</i></a></section>
+{% endblock %}

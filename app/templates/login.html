@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ef">
+  <title>Acesso · Studio Débora Ventura</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=1.0.1">
+  <style>
+    /* Tela de acesso independente: não depende do restante do tema administrativo. */
+    html, body.login-body { min-height:100%; width:100%; margin:0; }
+    body.login-body {
+      min-height:100vh; display:grid !important; place-items:center !important;
+      padding:32px 18px; background:#f7f5ef !important; color:#171511 !important;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+    .login-wrap {
+      width:100%; max-width:430px; margin:0 auto; padding:0;
+    }
+    .login-card {
+      width:100%; box-sizing:border-box; padding:38px 42px 30px;
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      background:#fff; border:1px solid #e5d7b9; border-radius:16px;
+      box-shadow:0 18px 55px rgba(68,51,20,.09);
+    }
+    .login-logo {
+      display:block; width:142px !important; height:142px !important;
+      max-width:100%; object-fit:contain; margin:0 auto 20px;
+    }
+    .login-eyebrow {
+      margin:0 0 9px; color:#9b762f; font-size:10px; font-weight:700;
+      letter-spacing:2.4px; text-transform:uppercase;
+    }
+    .login-card h1 {
+      margin:0; color:#171511 !important; font-family:Georgia, 'Times New Roman', serif;
+      font-size:27px; line-height:1.2; font-weight:400;
+    }
+    .login-card p {
+      max-width:300px; margin:12px 0 25px; color:#625d54 !important;
+      font-size:13px; line-height:1.6;
+    }
+    .login-card form { width:100%; display:grid; gap:11px; text-align:left; }
+    .login-card label {
+      display:grid; gap:8px; color:#24211b !important;
+      font-size:12px; font-weight:700;
+    }
+    .login-card input[type=password] {
+      width:100%; min-height:48px; box-sizing:border-box; padding:0 14px;
+      border:1px solid #d8cdb7; border-radius:7px; background:#fff !important;
+      color:#171511 !important; font:14px Arial, sans-serif;
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    .login-card input[type=password]:focus {
+      border-color:#b58b3b; box-shadow:0 0 0 3px rgba(181,139,59,.13);
+    }
+    .login-card input::placeholder { color:#898276 !important; opacity:1; }
+    .login-card .gold-button {
+      width:100%; min-height:48px; margin-top:5px; border:0; border-radius:7px;
+      display:flex; align-items:center; justify-content:center; gap:12px;
+      background:linear-gradient(110deg,#b58b3b,#dfc98f); color:#211a0d !important;
+      font-size:13px; font-weight:700; cursor:pointer;
+      box-shadow:0 5px 14px rgba(154,115,43,.15);
+    }
+    .login-card .gold-button:hover { filter:brightness(1.035); }
+    .login-error {
+      width:100%; box-sizing:border-box; margin:0 0 14px; padding:11px 13px;
+      border:1px solid #e5b9ae; border-radius:7px; background:#fff4f1;
+      color:#7b2e22 !important; text-align:left; font-size:12px;
+    }
+    .login-card>small {
+      display:block; margin-top:24px; padding-top:17px; width:100%;
+      border-top:1px solid #eee8dc; color:#81796c !important;
+      font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+    }
+    @media(max-width:480px) {
+      body.login-body { padding:18px 14px; }
+      .login-card { padding:30px 24px 24px; }
+      .login-logo { width:124px !important; height:124px !important; }
+      .login-card h1 { font-size:24px; }
+    }
+  </style>
+</head>
+<body class="login-body">
+  <main class="login-wrap">
+    <section class="login-card" aria-labelledby="login-title">
+      <img src="/static/img/logo-debora-ventura.png" alt="Logo Débora Ventura Studio Beauty" class="login-logo">
+      <div class="login-eyebrow">Acesso restrito</div>
+      <h1 id="login-title">Bem-vinda ao Studio</h1>
+      <p>Informe sua senha para acessar o sistema de gestão.</p>
+      {% if error %}<div class="login-error" role="alert">{{ error }}</div>{% endif %}
+      <form method="post" action="/login">
+        <input type="hidden" name="next" value="{{ next }}">
+        <label for="access-password">Senha de acesso
+          <input id="access-password" type="password" name="password" inputmode="numeric" autocomplete="current-password" placeholder="Digite sua senha" required autofocus>
+        </label>
+        <button class="gold-button" type="submit">Entrar no sistema <span aria-hidden="true">→</span></button>
+      </form>
+      <small>Studio Débora Ventura · Painel administrativo</small>
+    </section>
+  </main>
+</body>
+</html>

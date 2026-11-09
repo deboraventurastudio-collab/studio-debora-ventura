@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Studio Débora Ventura{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css?v=1.3.0">
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <a class="brand" href="/">
+    <img src="/static/img/logo-debora-ventura.png" alt="Débora Ventura Studio Beauty" class="brand-logo">
+    <span class="brand-caption">STUDIO BEAUTY</span>
+  </a>
+  <div class="nav-label">MENU PRINCIPAL</div>
+  <nav>
+    <a href="/" class="{% if request.url.path == '/' %}active{% endif %}"><i>⌂</i><span>Visão geral</span></a>
+    <a href="/agenda" class="{% if request.url.path.startswith('/agenda') %}active{% endif %}"><i>▦</i><span>Atendimentos / Agenda</span></a>
+    <a href="/clientes" class="{% if request.url.path.startswith('/clientes') %}active{% endif %}"><i>♙</i><span>Clientes</span></a>
+    <a href="/servicos" class="{% if request.url.path == '/servicos' %}active{% endif %}"><i>✧</i><span>Serviços</span></a>
+    <a href="/produtos" class="{% if request.url.path == '/produtos' %}active{% endif %}"><i>◇</i><span>Produtos & estoque</span></a>
+    <a href="/vendas" class="{% if request.url.path.startswith('/vendas') %}active{% endif %}"><i>▤</i><span>Vendas de produtos</span></a>
+    <a href="/caixa/geral" class="{% if request.url.path.startswith('/caixa') %}active{% endif %}"><i>◷</i><span>Fluxo de caixa</span></a>
+  </nav>
+  <div class="nav-label reports-label">GESTÃO E ANÁLISES</div>
+  <nav>
+    <a href="/relatorios" class="{% if request.url.path == '/relatorios' %}active{% endif %}"><i>▥</i><span>Relatório geral</span></a>
+    <a href="/relatorios/servicos" class="{% if request.url.path == '/relatorios/servicos' %}active{% endif %}"><i>✧</i><span>Relatório de serviços</span></a>
+    <a href="/relatorios/produtos" class="{% if request.url.path == '/relatorios/produtos' %}active{% endif %}"><i>◇</i><span>Relatório de vendas</span></a>
+    <a href="/relatorios/estoque"><i>⇄</i><span>Movimentação de estoque</span></a>
+  </nav>
+  <div class="sidebar-foot"><span class="gold-dot"></span> STUDIO DÉBORA VENTURA <small>PAINEL ADMINISTRATIVO · 1.0.0</small></div>
+</aside>
+<button class="mobile-menu-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar" onclick="document.body.classList.toggle('menu-open');this.setAttribute('aria-expanded',document.body.classList.contains('menu-open'))">☰ <span>Menu</span></button>
+<div class="mobile-menu-backdrop" onclick="document.body.classList.remove('menu-open')"></div>
+<main class="main">
+<header class="topbar">
+ <div><div class="eyebrow">{% block eyebrow %}STUDIO BEAUTY · ADMINISTRAÇÃO{% endblock %}</div><h1>{% block heading %}Visão geral{% endblock %}</h1></div>
+ <div class="top-meta"><span class="online-dot"></span> Ambiente protegido <span class="top-date">{{ page_date if page_date is defined else "" }}</span><form method="post" action="/sair" class="logout-form"><button type="submit" class="logout-button">Sair</button></form></div>
+</header>
+{% block content %}{% endblock %}
+<footer>STUDIO DÉBORA VENTURA <span>✦</span> GESTÃO COM ELEGÂNCIA</footer>
+</main>
+<datalist id="client-options">{% if clients is defined %}{% for c in clients %}<option value="{{ c.name|e }}" data-id="{{ c.id }}"></option>{% endfor %}{% endif %}</datalist>
+<script>document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll("[data-client-picker]").forEach(input=>{const form=input.closest("form"),hidden=form?.querySelector("[data-client-id]");const options=[...document.querySelectorAll("#client-options option")];function sync(){const typed=input.value.trim(),match=options.find(o=>o.value.toLocaleLowerCase("pt-BR")===typed.toLocaleLowerCase("pt-BR"));if(hidden)hidden.value=match?match.dataset.id:"";input.setCustomValidity(input.dataset.required==="true"&&!match?"Selecione uma cliente da lista de sugestões.":(typed&&!match?"Escolha uma cliente cadastrada na lista.":""));if(hidden&&!typed)hidden.value="";}input.addEventListener("input",sync);input.addEventListener("change",sync);if(hidden?.value){const id=hidden.value;const match=options.find(o=>o.dataset.id===id);if(match)input.value=match.value;}if(form)form.addEventListener("submit",e=>{sync();if(input.validationMessage){e.preventDefault();input.reportValidity();}});});});</script>
+</body></html>

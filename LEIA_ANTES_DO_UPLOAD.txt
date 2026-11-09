@@ -1,0 +1,12 @@
+STUDIO DEBORA VENTURA v1.4.0 — BANCO PERMANENTE
+
+ATENÇÃO: antes de enviar esta versão ao GitHub, entre no Render > serviço do Studio > Environment e configure:
+APP_ENV=production
+DATABASE_URL=<connection string PostgreSQL do Neon; segredo>
+
+Mantenha STUDIO_MASTER_PASSWORD e SESSION_SECRET_KEY já existentes.
+Não publique a versão antes de salvar DATABASE_URL. O sistema foi preparado para bloquear SQLite temporário em produção.
+
+Depois disso, envie o conteúdo desta pasta ao mesmo repositório GitHub. Não envie arquivos .db, pasta data, .env, senhas ou tokens.
+
+Os dados antigos que sumiram do Render não são recuperados automaticamente. Primeiro vamos garantir o banco permanente e depois verificar se existe backup recuperável.

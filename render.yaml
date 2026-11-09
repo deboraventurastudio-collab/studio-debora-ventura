@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: studio-debora-ventura
+    runtime: python
+    plan: free
+    region: ohio
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: STUDIO_MASTER_PASSWORD
+        sync: false
+      - key: SESSION_SECRET_KEY
+        generateValue: true
