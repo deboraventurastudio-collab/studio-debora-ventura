@@ -1,8 +1,7 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{% block title %}Studio Débora Ventura{% endblock %}</title>
 <link rel="stylesheet" href="/static/css/style.css?v=1.3.0">
 </head>
@@ -31,78 +30,16 @@
   </nav>
   <div class="sidebar-foot"><span class="gold-dot"></span> STUDIO DÉBORA VENTURA <small>PAINEL ADMINISTRATIVO · 1.0.0</small></div>
 </aside>
-
 <button class="mobile-menu-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar" onclick="document.body.classList.toggle('menu-open');this.setAttribute('aria-expanded',document.body.classList.contains('menu-open'))">☰ <span>Menu</span></button>
 <div class="mobile-menu-backdrop" onclick="document.body.classList.remove('menu-open')"></div>
-
 <main class="main">
 <header class="topbar">
- <div>
-   <div class="eyebrow">{% block eyebrow %}STUDIO BEAUTY · ADMINISTRAÇÃO{% endblock %}</div>
-   <h1>{% block heading %}Visão geral{% endblock %}</h1>
- </div>
- <div class="top-meta">
-   <span class="online-dot"></span> Ambiente protegido
-   <span class="top-date">{{ page_date if page_date is defined else "" }}</span>
-   <form method="post" action="/sair" class="logout-form"><button type="submit" class="logout-button">Sair</button></form>
- </div>
+ <div><div class="eyebrow">{% block eyebrow %}STUDIO BEAUTY · ADMINISTRAÇÃO{% endblock %}</div><h1>{% block heading %}Visão geral{% endblock %}</h1></div>
+ <div class="top-meta"><span class="online-dot"></span> Ambiente protegido <span class="top-date">{{ page_date if page_date is defined else "" }}</span><form method="post" action="/sair" class="logout-form"><button type="submit" class="logout-button">Sair</button></form></div>
 </header>
-
 {% block content %}{% endblock %}
-
 <footer>STUDIO DÉBORA VENTURA <span>✦</span> GESTÃO COM ELEGÂNCIA</footer>
 </main>
-
-<datalist id="client-options">
-{% if clients is defined and clients is iterable and clients is not string %}
-  {% for c in clients %}
-    <option value="{{ c.name|e }}" data-id="{{ c.id }}"></option>
-  {% endfor %}
-{% endif %}
-</datalist>
-
-<script>
-document.addEventListener("DOMContentLoaded",()=>{
-  document.querySelectorAll("[data-client-picker]").forEach(input=>{
-    const form=input.closest("form");
-    const hidden=form?.querySelector("[data-client-id]");
-    const options=[...document.querySelectorAll("#client-options option")];
-
-    function sync(){
-      const typed=input.value.trim();
-      const match=options.find(o=>o.value.toLocaleLowerCase("pt-BR")===typed.toLocaleLowerCase("pt-BR"));
-
-      if(hidden) hidden.value=match?match.dataset.id:"";
-
-      input.setCustomValidity(
-        input.dataset.required==="true"&&!match
-          ?"Selecione uma cliente da lista de sugestões."
-          :(typed&&!match?"Escolha uma cliente cadastrada na lista.":"")
-      );
-
-      if(hidden&&!typed) hidden.value="";
-    }
-
-    input.addEventListener("input",sync);
-    input.addEventListener("change",sync);
-
-    if(hidden?.value){
-      const id=hidden.value;
-      const match=options.find(o=>o.dataset.id===id);
-      if(match) input.value=match.value;
-    }
-
-    if(form){
-      form.addEventListener("submit",e=>{
-        sync();
-        if(input.validationMessage){
-          e.preventDefault();
-          input.reportValidity();
-        }
-      });
-    }
-  });
-});
-</script>
-</body>
-</html>
+<datalist id="client-options">{% if clients is defined %}{% for c in clients %}<option value="{{ c.name|e }}" data-id="{{ c.id }}"></option>{% endfor %}{% endif %}</datalist>
+<script>document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll("[data-client-picker]").forEach(input=>{const form=input.closest("form"),hidden=form?.querySelector("[data-client-id]");const options=[...document.querySelectorAll("#client-options option")];function sync(){const typed=input.value.trim(),match=options.find(o=>o.value.toLocaleLowerCase("pt-BR")===typed.toLocaleLowerCase("pt-BR"));if(hidden)hidden.value=match?match.dataset.id:"";input.setCustomValidity(input.dataset.required==="true"&&!match?"Selecione uma cliente da lista de sugestões.":(typed&&!match?"Escolha uma cliente cadastrada na lista.":""));if(hidden&&!typed)hidden.value="";}input.addEventListener("input",sync);input.addEventListener("change",sync);if(hidden?.value){const id=hidden.value;const match=options.find(o=>o.dataset.id===id);if(match)input.value=match.value;}if(form)form.addEventListener("submit",e=>{sync();if(input.validationMessage){e.preventDefault();input.reportValidity();}});});});</script>
+</body></html>
