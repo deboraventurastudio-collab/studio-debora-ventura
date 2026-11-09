@@ -341,7 +341,7 @@ def sales_page(request: Request):
         LEFT JOIN appointments a ON a.id=s.appointment_id
         LEFT JOIN sale_items si ON si.sale_id=s.id
         WHERE EXISTS (SELECT 1 FROM sale_items sx WHERE sx.sale_id=s.id AND sx.item_type='produto')
-        GROUP BY s.id ORDER BY s.created_at DESC LIMIT 100""")
+        GROUP BY s.id, c.name, a.starts_at ORDER BY s.created_at DESC LIMIT 100""")
     enriched=[]
     for row in rows:
         item=dict(row); item["payments"]=query("SELECT * FROM payments WHERE sale_id=? ORDER BY created_at DESC",(row["id"],)); enriched.append(item)
